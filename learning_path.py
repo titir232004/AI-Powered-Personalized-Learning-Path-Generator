@@ -109,13 +109,18 @@ def generate_learning_path(user_id: str):
     Explain why this learning path is suitable and how it improves job readiness.
     """
 
-    explanation = explain_learning_path(context_prompt)
+    # -------------------------------
+    # 7. AI Explanation (Ollama)
+    # -------------------------------
+
+    explanation = explain_learning_path(learner, phases)
 
     # -------------------------------
     # 8. Final Output
     # -------------------------------
     return {
         "learner_id": learner_id,
+        "learner_name": learner.get("full_name"),
         "phases": phases,
         "estimated_duration_weeks": adjusted_weeks,
         "success_probability": success_probability,

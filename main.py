@@ -1,14 +1,10 @@
 import json
 from learning_path import generate_learning_path
+from storage import save_learning_path   # 👈 NEW
 from db import supabase
 
 
 def get_all_users():
-    """
-    Fetch all learners from Supabase.
-    Make sure table name matches EXACTLY.
-    """
-
     response = supabase.table("learners").select("*").execute()
 
     print("\n=== SUPABASE DEBUG INFO ===")
@@ -19,7 +15,6 @@ def get_all_users():
     if not response.data:
         raise Exception("No users found in database. Check table name, project URL, or RLS policy.")
 
-    # Detect correct ID column automatically
     sample_row = response.data[0]
 
     if "id" in sample_row:
@@ -44,17 +39,16 @@ def main():
         for user_id in user_ids:
             print(f"🔹 Generating path for User: {user_id}")
 
+            # 1️⃣ Generate learning path
             result = generate_learning_path(user_id)
 
             print("   ✅ Path generated successfully")
 
-            # Save output to file
-            filename = f"learning_path_{user_id}.json"
-            with open(filename, "w") as f:
-                json.dump(result, f, indent=4)
+            # 2️⃣ Save to Supabase
+            save_learning_path(result)
+            print("   ☁️ Saved to Supabase")
 
-            print(f"   📁 Saved to {filename}\n")
-
+            # 3️⃣ Save local backup
         print("🎉 All users processed successfully!")
 
     except Exception as e:
