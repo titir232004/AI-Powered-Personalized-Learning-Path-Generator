@@ -1,0 +1,66 @@
+import json
+from learning_path import generate_learning_path
+from db import supabase
+
+
+def get_all_users():
+    """
+    Fetch all learners from Supabase.
+    Make sure table name matches EXACTLY.
+    """
+
+    response = supabase.table("learners").select("*").execute()
+
+    print("\n=== SUPABASE DEBUG INFO ===")
+    print("Raw response:", response)
+    print("Data returned:", response.data)
+    print("===========================\n")
+
+    if not response.data:
+        raise Exception("No users found in database. Check table name, project URL, or RLS policy.")
+
+    # Detect correct ID column automatically
+    sample_row = response.data[0]
+
+    if "id" in sample_row:
+        id_column = "id"
+    elif "user_id" in sample_row:
+        id_column = "user_id"
+    elif "uuid" in sample_row:
+        id_column = "uuid"
+    else:
+        raise Exception("No valid ID column found in learners table.")
+
+    return [user[id_column] for user in response.data]
+
+
+def main():
+    print("\n=== AI Learning Path Generator (AUTO MODE) ===\n")
+
+    try:
+        user_ids = get_all_users()
+        print(f"✅ Found {len(user_ids)} users.\n")
+
+        for user_id in user_ids:
+            print(f"🔹 Generating path for User: {user_id}")
+
+            result = generate_learning_path(user_id)
+
+            print("   ✅ Path generated successfully")
+
+            # Save output to file
+            filename = f"learning_path_{user_id}.json"
+            with open(filename, "w") as f:
+                json.dump(result, f, indent=4)
+
+            print(f"   📁 Saved to {filename}\n")
+
+        print("🎉 All users processed successfully!")
+
+    except Exception as e:
+        print("\n❌ SYSTEM ERROR:")
+        print(str(e))
+
+
+if __name__ == "__main__":
+    main()
