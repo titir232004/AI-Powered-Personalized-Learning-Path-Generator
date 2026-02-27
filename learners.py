@@ -1,11 +1,11 @@
 from db import supabase
 
 
-def fetch_learner(learner_id: str):
+def fetch_learner(user_id: str):
 
     response = supabase.table("learners") \
         .select("*") \
-        .eq("id", learner_id) \
+        .eq("user_id",user_id) \
         .execute()
 
     if not response.data:

@@ -3,12 +3,11 @@ from assessment import fetch_latest_assessment
 from rag import explain_learning_path
 
 
-def generate_learning_path(user_id: str):
+def generate_learning_path(learner: str):
 
     # -------------------------------
     # 1. Fetch Learner Data
     # -------------------------------
-    learner = fetch_learner(user_id)
 
     if not learner:
         raise ValueError("Learner not found")
@@ -37,42 +36,52 @@ def generate_learning_path(user_id: str):
     missing_skills = list(set(skill_gaps) - set(current_skills))
 
     # -------------------------------
-    # 4. Phase Structuring Logic
+    # 4. Phase Structuring Logic (STRICT 3 PHASES)
     # -------------------------------
+
     foundation = []
     intermediate = []
     advanced = []
 
+    skill_report = assessment.get("skill_report", [])
+
+    # Convert report to dict for fast lookup
+    skill_scores = {
+        item["skill"]: float(item["percentage"])
+        for item in skill_report
+    }
+
     for skill in missing_skills:
-        if difficulty.get("easy", 0) < 60:
+
+        score = skill_scores.get(skill, 0)
+
+        if score < 40:
             foundation.append(skill)
-        elif difficulty.get("medium", 0) < 60:
+
+        elif 40 <= score < 70:
             intermediate.append(skill)
+
         else:
             advanced.append(skill)
 
-    phases = []
-
-    if foundation:
-        phases.append({
-            "phase": "Foundation Phase",
+    # Ensure 3 phases always exist
+    phases = [
+        {
+            "phase": "Basics",
             "skills": foundation,
-            "duration_weeks": len(foundation) * 2
-        })
-
-    if intermediate:
-        phases.append({
-            "phase": "Intermediate Phase",
+            "duration_weeks": max(2, len(foundation) * 2)
+        },
+        {
+            "phase": "Intermediate",
             "skills": intermediate,
-            "duration_weeks": len(intermediate) * 3
-        })
-
-    if advanced:
-        phases.append({
-            "phase": "Advanced Phase",
+            "duration_weeks": max(3, len(intermediate) * 3)
+        },
+        {
+            "phase": "Advanced",
             "skills": advanced,
-            "duration_weeks": len(advanced) * 4
-        })
+            "duration_weeks": max(4, len(advanced) * 4)
+        }
+    ]
 
     # -------------------------------
     # 5. Duration Calculation

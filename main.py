@@ -1,60 +1,58 @@
-import json
+print("MAIN FILE LOADED")
+
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
 from learning_path import generate_learning_path
-from storage import save_learning_path   # 👈 NEW
-from db import supabase
+from storage import save_learning_path
+from learners import fetch_learner
+
+app = FastAPI(
+    title="AI Learning Path Generator",
+    version="1.0"
+)
+
+# ----------------------------
+# Request Schema
+# ----------------------------
+class GeneratePathRequest(BaseModel):
+    user_id: str  # Supabase UUID of the learner
 
 
-def get_all_users():
-    response = supabase.table("learners").select("*").execute()
+# ----------------------------
+# Generate Learning Path API
+# ----------------------------
+@app.post("/generate-path")
+def generate_path(request: GeneratePathRequest):
+    user_id = request.user_id
+    print("Received ID from frontend:", user_id)
 
-    print("\n=== SUPABASE DEBUG INFO ===")
-    print("Raw response:", response)
-    print("Data returned:", response.data)
-    print("===========================\n")
+    # 1️⃣ Fetch learner profile
+    learner = fetch_learner(user_id)
+    if not learner:
+        raise HTTPException(status_code=404, detail="Learner not found")
 
-    if not response.data:
-        raise Exception("No users found in database. Check table name, project URL, or RLS policy.")
+    # 2️⃣ Generate roadmap (RAG + AI explanation)
+    result = generate_learning_path(learner)  # Pass learner object directly
 
-    sample_row = response.data[0]
+    if not result:
+        raise HTTPException(status_code=500, detail="Failed to generate learning path")
 
-    if "id" in sample_row:
-        id_column = "id"
-    elif "user_id" in sample_row:
-        id_column = "user_id"
-    elif "uuid" in sample_row:
-        id_column = "uuid"
-    else:
-        raise Exception("No valid ID column found in learners table.")
+    # 3️⃣ Save the generated roadmap in Supabase
+    save_response = save_learning_path(
+        learner_id=learner["id"],  # ✅ pass UUID string
+        phases=result["phases"],
+        explanation=result["explanation"],
+        estimated_duration_weeks=result.get("estimated_duration_weeks"),
+        success_probability=result.get("success_probability")
+    )
 
-    return [user[id_column] for user in response.data]
-
-
-def main():
-    print("\n=== AI Learning Path Generator (AUTO MODE) ===\n")
-
-    try:
-        user_ids = get_all_users()
-        print(f"✅ Found {len(user_ids)} users.\n")
-
-        for user_id in user_ids:
-            print(f"🔹 Generating path for User: {user_id}")
-
-            # 1️⃣ Generate learning path
-            result = generate_learning_path(user_id)
-
-            print("   ✅ Path generated successfully")
-
-            # 2️⃣ Save to Supabase
-            save_learning_path(result)
-            print("   ☁️ Saved to Supabase")
-
-            # 3️⃣ Save local backup
-        print("🎉 All users processed successfully!")
-
-    except Exception as e:
-        print("\n❌ SYSTEM ERROR:")
-        print(str(e))
-
-
-if __name__ == "__main__":
-    main()
+    # 4️⃣ Return the result to the frontend
+    return {
+        "status": "success",
+        "data": {
+            "learner_id": user_id,
+            "phases": result["phases"],
+            "explanation": result["explanation"],
+            "db_insert": "success" if save_response.data else "failed"
+        }
+    }

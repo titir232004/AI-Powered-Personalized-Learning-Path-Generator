@@ -1,13 +1,21 @@
 import requests
 import json
+import os
 
-OLLAMA_URL = "http://localhost:11434/api/generate"
-MODEL = "mistral:latest"
+# ✅ Make sure your API key is set in environment variables
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
 
 def explain_learning_path(learner, phases):
+
+    # Build prompt including learning_style
     prompt = f"""
 You are an expert AI career mentor aligned with NSQF standards.
+
+The learning roadmap ALWAYS has 3 phases:
+1. Basics
+2. Intermediate
+3. Advanced
 
 Learner Profile:
 - Target Job Role: {learner.get('target_job_role')}
@@ -15,46 +23,48 @@ Learner Profile:
 - Weekly Study Hours: {learner.get('hours_per_week')}
 - Timeline: {learner.get('timeline_months')} months
 - Current Skills: {learner.get('current_skills')}
+- Learning Style: {learner.get('learning_style')}  # ✅ Included
 
 Learning Path Structure:
 {json.dumps(phases, indent=2)}
 
-Explain clearly:
+Explain clearly and separately:
 
-1. Why each phase is necessary
-2. What practical skills the learner will gain
-3. How this roadmap improves job readiness
-4. Expected real-world outcomes
+1. Why the Basics phase is important
+2. Why the Intermediate phase builds career readiness
+3. Why the Advanced phase ensures job-level competency
+4. What practical outcomes the learner can expect
 
-Keep the response structured, concise, and motivating.
+**Tailor your explanation to the learner's learning style**, giving tips or examples suitable for that style (e.g., visual, auditory, kinesthetic, reading/writing).
+
+Keep the explanation structured, concise, and motivating.
 """
 
-    try:
-        response = requests.post(
-            OLLAMA_URL,
-            json={
-                "model": MODEL,
-                "prompt": prompt,
-                "stream": False,
-                "temperature": 0.7
-            },
-            timeout=120
-        )
+    # Call Groq API
+    response = requests.post(
+        "https://api.groq.com/openai/v1/chat/completions",
+        headers={
+            "Authorization": f"Bearer {GROQ_API_KEY}",
+            "Content-Type": "application/json"
+        },
+        json={
+            "model": "llama-3.1-8b-instant",
+            "messages": [
+                {"role": "user", "content": prompt}
+            ]
+        }
+    )
 
-        response.raise_for_status()
+    # Debug info
+    print("STATUS:", response.status_code)
+    print("RAW RESPONSE:", response.text)
 
-        data = response.json()
+    result = response.json()
 
-        if "response" not in data:
-            return "AI explanation could not be generated."
+    if "choices" not in result:
+        print("Groq Error JSON:", result)
+        return "AI explanation temporarily unavailable."
 
-        return data["response"].strip()
+    # Return AI-generated explanation
+    return result["choices"][0]["message"]["content"]
 
-    except requests.exceptions.Timeout:
-        return "AI explanation timed out. Please try again."
-
-    except requests.exceptions.ConnectionError:
-        return "Ollama server is not running."
-
-    except Exception as e:
-        return f"AI generation error: {str(e)}"
