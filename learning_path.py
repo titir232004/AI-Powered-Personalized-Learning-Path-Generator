@@ -3,7 +3,7 @@ from assessment import fetch_latest_assessment
 from rag import explain_learning_path
 
 
-def generate_learning_path(learner: str):
+async def generate_learning_path(learner: str):
 
     # -------------------------------
     # 1. Fetch Learner Data
