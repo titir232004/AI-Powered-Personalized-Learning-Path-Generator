@@ -509,4 +509,5 @@ if __name__ == "__main__":
     logger.info(f"👤 Learner-aware: YES")
     logger.info(f"💾 Saves to: {RESULTS_TABLE}")
     logger.info(f"📊 Data flows to: AI Learning Path Generator module")
-    uvicorn.run("main:app", host="0.0.0.0", port=8000)
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run("main:app", host="0.0.0.0", port=port)
