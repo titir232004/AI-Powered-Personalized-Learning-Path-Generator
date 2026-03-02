@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+supabase
+pydantic
+python-dotenv
+python-multipart   
+typing-extensions
+reportlab
+httpx
