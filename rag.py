@@ -41,7 +41,7 @@ Keep the explanation structured, concise, and motivating.
 """
 
     # Call Groq API
-   try:
+try:
     response = requests.post(
         "https://api.groq.com/openai/v1/chat/completions",
         headers={
@@ -73,5 +73,6 @@ except Exception as e:
 
     # Return AI-generated explanation
     return result["choices"][0]["message"]["content"]
+
 
 
