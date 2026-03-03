@@ -31,31 +31,27 @@ class GeneratePathRequest(BaseModel):
 # Generate Learning Path API
 # ----------------------------
 @app.post("/generate-path")
-def generate_path(request: GeneratePathRequest):
+async def generate_path(request: GeneratePathRequest):
     user_id = request.user_id
     print("Received ID from frontend:", user_id)
 
-    # 1️⃣ Fetch learner profile
     learner = fetch_learner(user_id)
     if not learner:
         raise HTTPException(status_code=404, detail="Learner not found")
 
-    # 2️⃣ Generate roadmap (RAG + AI explanation)
-    result = generate_learning_path(learner)  # Pass learner object directly
+    result = await generate_learning_path(learner)
 
     if not result:
         raise HTTPException(status_code=500, detail="Failed to generate learning path")
 
-    # 3️⃣ Save the generated roadmap in Supabase
     save_response = save_learning_path(
-        learner_id=learner["id"],  # ✅ pass UUID string
+        learner_id=learner["id"],
         phases=result["phases"],
         explanation=result["explanation"],
         estimated_duration_weeks=result.get("estimated_duration_weeks"),
         success_probability=result.get("success_probability")
     )
 
-    # 4️⃣ Return the result to the frontend
     return {
         "status": "success",
         "data": {
@@ -65,9 +61,9 @@ def generate_path(request: GeneratePathRequest):
             "db_insert": "success" if save_response.data else "failed"
         }
     }
-
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))
 
     uvicorn.run("main:app", host="0.0.0.0", port=port)
+
 
