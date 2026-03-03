@@ -2,13 +2,11 @@ import requests
 import json
 import os
 
-# ✅ Make sure your API key is set in environment variables
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
 
 def explain_learning_path(learner, phases):
 
-    # Build prompt including learning_style
     prompt = f"""
 You are an expert AI career mentor aligned with NSQF standards.
 
@@ -23,7 +21,7 @@ Learner Profile:
 - Weekly Study Hours: {learner.get('hours_per_week')}
 - Timeline: {learner.get('timeline_months')} months
 - Current Skills: {learner.get('current_skills')}
-- Learning Style: {learner.get('learning_style')}  # ✅ Included
+- Learning Style: {learner.get('learning_style')}
 
 Learning Path Structure:
 {json.dumps(phases, indent=2)}
@@ -35,44 +33,36 @@ Explain clearly and separately:
 3. Why the Advanced phase ensures job-level competency
 4. What practical outcomes the learner can expect
 
-**Tailor your explanation to the learner's learning style**, giving tips or examples suitable for that style (e.g., visual, auditory, kinesthetic, reading/writing).
-
+Tailor your explanation to the learner's learning style.
 Keep the explanation structured, concise, and motivating.
 """
 
-    # Call Groq API
-try:
-    response = requests.post(
-        "https://api.groq.com/openai/v1/chat/completions",
-        headers={
-            "Authorization": f"Bearer {GROQ_API_KEY}",
-            "Content-Type": "application/json"
-        },
-        json={
-            "model": "llama-3.1-8b-instant",
-            "messages": [
-                {"role": "user", "content": prompt}
-            ]
-        },
-        timeout=30
-    )
+    try:
+        response = requests.post(
+            "https://api.groq.com/openai/v1/chat/completions",
+            headers={
+                "Authorization": f"Bearer {GROQ_API_KEY}",
+                "Content-Type": "application/json"
+            },
+            json={
+                "model": "llama-3.1-8b-instant",
+                "messages": [
+                    {"role": "user", "content": prompt}
+                ]
+            },
+            timeout=30
+        )
 
-    print("STATUS:", response.status_code)
-    print("RAW RESPONSE:", response.text)
+        print("STATUS:", response.status_code)
 
-    response.raise_for_status()
+        response.raise_for_status()
 
-    result = response.json()
+        result = response.json()
 
-    explanation = result["choices"][0]["message"]["content"]
-    return explanation
+        explanation = result["choices"][0]["message"]["content"]
 
-except Exception as e:
-    print("🚨 Groq API Error:", str(e))
-    return "AI explanation temporarily unavailable."
+        return explanation
 
-    # Return AI-generated explanation
-    return result["choices"][0]["message"]["content"]
-
-
-
+    except Exception as e:
+        print("🚨 Groq API Error:", str(e))
+        return "AI explanation temporarily unavailable."
