@@ -98,11 +98,10 @@ async def generate_learning_path(learner: str):
     # 6. Success Probability
     # -------------------------------
    base_score = overall_percentage / 100
-effort_factor = min(hours_per_week / 40, 1)
-
-success_probability = round(
-    min(0.95, 0.45 + base_score * 0.35 + effort_factor * 0.2),
-    2
+   effort_factor = min(hours_per_week / 40, 1)
+   success_probability = round(
+       min(0.95, 0.45 + base_score * 0.35 + effort_factor * 0.2),
+       2
 )
 
     # -------------------------------
@@ -136,3 +135,4 @@ success_probability = round(
         "explanation": explanation
 
     }
+
