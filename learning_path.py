@@ -97,13 +97,13 @@ async def generate_learning_path(learner: str):
     # -------------------------------
     # 6. Success Probability
     # -------------------------------
-    base_score = overall_percentage / 100
-    effort_factor = min(hours_per_week / 40, 1)
+   base_score = overall_percentage / 100
+effort_factor = min(hours_per_week / 40, 1)
 
-    success_probability = round(
-        min(0.95, base_score * 0.6 + effort_factor * 0.4),
-        2
-    )
+success_probability = round(
+    min(0.95, 0.45 + base_score * 0.35 + effort_factor * 0.2),
+    2
+)
 
     # -------------------------------
     # 7. AI Explanation (Ollama)
@@ -134,4 +134,5 @@ async def generate_learning_path(learner: str):
         "estimated_duration_weeks": adjusted_weeks,
         "success_probability": success_probability,
         "explanation": explanation
+
     }
