@@ -3,11 +3,7 @@ from assessment import fetch_latest_assessment
 from rag import explain_learning_path
 
 
-async def generate_learning_path(learner: str):
-
-    # -------------------------------
-    # 1. Fetch Learner Data
-    # -------------------------------
+async def generate_learning_path(learner: dict):
 
     if not learner:
         raise ValueError("Learner not found")
@@ -19,7 +15,7 @@ async def generate_learning_path(learner: str):
     target_role = learner["target_job_role"]
 
     # -------------------------------
-    # 2. Fetch Latest Assessment
+    # Fetch Assessment
     # -------------------------------
     assessment = fetch_latest_assessment(learner_id)
 
@@ -27,44 +23,36 @@ async def generate_learning_path(learner: str):
         raise ValueError("No assessment found")
 
     skill_gaps = assessment.get("skill_gaps", [])
-    difficulty = assessment.get("difficulty_breakdown", {})
     overall_percentage = float(assessment.get("overall_percentage", 0))
+    skill_report = assessment.get("skill_report", [])
 
     # -------------------------------
-    # 3. Identify Final Skill Gaps
+    # Identify Missing Skills
     # -------------------------------
     missing_skills = list(set(skill_gaps) - set(current_skills))
 
-    # -------------------------------
-    # 4. Phase Structuring Logic (STRICT 3 PHASES)
-    # -------------------------------
-
-    foundation = []
-    intermediate = []
-    advanced = []
-
-    skill_report = assessment.get("skill_report", [])
-
-    # Convert report to dict for fast lookup
     skill_scores = {
         item["skill"]: float(item["percentage"])
         for item in skill_report
     }
 
-    for skill in missing_skills:
+    foundation = []
+    intermediate = []
+    advanced = []
 
+    for skill in missing_skills:
         score = skill_scores.get(skill, 0)
 
         if score < 40:
             foundation.append(skill)
-
         elif 40 <= score < 70:
             intermediate.append(skill)
-
         else:
             advanced.append(skill)
 
-    # Ensure 3 phases always exist
+    # -------------------------------
+    # Strict 3 Phases
+    # -------------------------------
     phases = [
         {
             "phase": "Basics",
@@ -84,47 +72,33 @@ async def generate_learning_path(learner: str):
     ]
 
     # -------------------------------
-    # 5. Duration Calculation
+    # Duration Calculation
     # -------------------------------
     total_weeks = sum(p["duration_weeks"] for p in phases)
 
-    # Adjust by weekly learning hours
     adjusted_weeks = max(
         total_weeks,
         timeline_months * 4
     )
 
     # -------------------------------
-    # 6. Success Probability
+    # Success Probability
     # -------------------------------
     base_score = overall_percentage / 100
     effort_factor = min(hours_per_week / 40, 1)
+
     success_probability = round(
         min(0.95, 0.45 + base_score * 0.35 + effort_factor * 0.2),
         2
-)
+    )
 
     # -------------------------------
-    # 7. AI Explanation (Ollama)
+    # AI Explanation
     # -------------------------------
-    context_prompt = f"""
-    Learner Target Role: {target_role}
-    Current Skills: {current_skills}
-    Identified Skill Gaps: {missing_skills}
-    Overall Assessment Score: {overall_percentage}
-    Weekly Study Hours: {hours_per_week}
-
-    Explain why this learning path is suitable and how it improves job readiness.
-    """
+    explanations = explain_learning_path(learner, phases)
 
     # -------------------------------
-    # 7. AI Explanation (Ollama)
-    # -------------------------------
-
-    explanation = explain_learning_path(learner, phases)
-
-    # -------------------------------
-    # 8. Final Output
+    # Final Output
     # -------------------------------
     return {
         "learner_id": learner_id,
@@ -132,8 +106,9 @@ async def generate_learning_path(learner: str):
         "phases": phases,
         "estimated_duration_weeks": adjusted_weeks,
         "success_probability": success_probability,
-        "explanation": explanation
 
+        "explanation_basics": explanations.get("explanation_basics"),
+        "explanation_intermediate": explanations.get("explanation_intermediate"),
+        "explanation_advanced": explanations.get("explanation_advanced"),
+        "explanation_outcomes": explanations.get("explanation_outcomes"),
     }
-
-
