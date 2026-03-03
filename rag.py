@@ -10,10 +10,21 @@ def explain_learning_path(learner, phases):
     prompt = f"""
 You are an expert AI career mentor aligned with NSQF standards.
 
-The learning roadmap ALWAYS has 3 phases:
-1. Basics
-2. Intermediate
-3. Advanced
+Based on the learner profile and the structured 3-phase roadmap below,
+explain each phase separately.
+
+Return STRICTLY in this JSON format:
+
+{{
+  "explanation_basics": "...",
+  "explanation_intermediate": "...",
+  "explanation_advanced": "...",
+  "explanation_outcomes": "..."
+}}
+
+DO NOT add markdown.
+DO NOT add extra text.
+ONLY return valid JSON.
 
 Learner Profile:
 - Target Job Role: {learner.get('target_job_role')}
@@ -23,18 +34,8 @@ Learner Profile:
 - Current Skills: {learner.get('current_skills')}
 - Learning Style: {learner.get('learning_style')}
 
-Learning Path Structure:
+Learning Path:
 {json.dumps(phases, indent=2)}
-
-Explain clearly and separately:
-
-1. Why the Basics phase is important
-2. Why the Intermediate phase builds career readiness
-3. Why the Advanced phase ensures job-level competency
-4. What practical outcomes the learner can expect
-
-Tailor your explanation to the learner's learning style.
-Keep the explanation structured, concise, and motivating.
 """
 
     try:
@@ -48,21 +49,36 @@ Keep the explanation structured, concise, and motivating.
                 "model": "llama-3.1-8b-instant",
                 "messages": [
                     {"role": "user", "content": prompt}
-                ]
+                ],
+                "temperature": 0.3
             },
             timeout=30
         )
 
-        print("STATUS:", response.status_code)
-
         response.raise_for_status()
 
         result = response.json()
+        ai_content = result["choices"][0]["message"]["content"]
 
-        explanation = result["choices"][0]["message"]["content"]
+        # 🔥 Safe JSON parsing
+        try:
+            parsed = json.loads(ai_content)
+        except Exception:
+            print("⚠️ AI returned invalid JSON")
+            parsed = {
+                "explanation_basics": "Explanation unavailable.",
+                "explanation_intermediate": "",
+                "explanation_advanced": "",
+                "explanation_outcomes": ""
+            }
 
-        return explanation
+        return parsed
 
     except Exception as e:
         print("🚨 Groq API Error:", str(e))
-        return "AI explanation temporarily unavailable."
+        return {
+            "explanation_basics": "Explanation unavailable.",
+            "explanation_intermediate": "",
+            "explanation_advanced": "",
+            "explanation_outcomes": ""
+        }
