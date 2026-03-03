@@ -41,6 +41,7 @@ Keep the explanation structured, concise, and motivating.
 """
 
     # Call Groq API
+   try:
     response = requests.post(
         "https://api.groq.com/openai/v1/chat/completions",
         headers={
@@ -52,19 +53,25 @@ Keep the explanation structured, concise, and motivating.
             "messages": [
                 {"role": "user", "content": prompt}
             ]
-        }
+        },
+        timeout=30
     )
 
-    # Debug info
     print("STATUS:", response.status_code)
     print("RAW RESPONSE:", response.text)
 
+    response.raise_for_status()
+
     result = response.json()
 
-    if "choices" not in result:
-        print("Groq Error JSON:", result)
-        return "AI explanation temporarily unavailable."
+    explanation = result["choices"][0]["message"]["content"]
+    return explanation
+
+except Exception as e:
+    print("🚨 Groq API Error:", str(e))
+    return "AI explanation temporarily unavailable."
 
     # Return AI-generated explanation
     return result["choices"][0]["message"]["content"]
+
 
