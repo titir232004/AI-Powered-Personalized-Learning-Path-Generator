@@ -62,14 +62,17 @@ async def generate_path(request: GeneratePathRequest):
     # Return response
     # ----------------------------
     return {
-        "status": "success",
-        "data": {
-            "learner_id": user_id,
-            "phases": result["phases"],
-            "explanation_basics": result.get("explanation_basics"),
-            "explanation_intermediate": result.get("explanation_intermediate"),
-            "explanation_advanced": result.get("explanation_advanced"),
-            "explanation_outcomes": result.get("explanation_outcomes"),
-            "db_insert": "success" if save_response.data else "failed"
-        }
+    "status": "success",
+    "data": {
+        "learner_id": user_id,
+        "phases": result["phases"],
+        "estimated_duration_weeks": result["estimated_duration_weeks"],
+        "success_probability": result["success_probability"],
+        "explanation_basics": result.get("explanation_basics"),
+        "explanation_intermediate": result.get("explanation_intermediate"),
+        "explanation_advanced": result.get("explanation_advanced"),
+        "explanation_outcomes": result.get("explanation_outcomes"),
+        "db_insert": "success" if save_response.data else "failed"
     }
+}
+
