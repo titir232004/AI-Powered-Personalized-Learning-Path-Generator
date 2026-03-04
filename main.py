@@ -26,21 +26,27 @@ app.add_middleware(
 class GeneratePathRequest(BaseModel):
     user_id: str  # Supabase UUID of the learner
 
-
 # ----------------------------
 # Generate Learning Path API
 # ----------------------------
 @app.post("/generate-path")
 async def generate_path(request: GeneratePathRequest):
     user_id = request.user_id
-    print("Received ID from frontend:", user_id)
-
+    print("Received ID from frontend / Swagger:", user_id)
     learner = fetch_learner(user_id)
+    print("Fetched learner from DB:", learner)  # <-- DEBUG
+
     if not learner:
         raise HTTPException(status_code=404, detail="Learner not found")
 
+    # ----------------------------
+    # Generate learning path
+    # ----------------------------
     result = await generate_learning_path(learner)
 
+    # ----------------------------
+    # Save to DB
+    # ----------------------------
     save_response = save_learning_path(
         learner_id=learner["id"],
         phases=result["phases"],
@@ -50,8 +56,11 @@ async def generate_path(request: GeneratePathRequest):
         explanation_outcomes=result["explanation_outcomes"],
         estimated_duration_weeks=result["estimated_duration_weeks"],
         success_probability=result["success_probability"]
-)
+    )
 
+    # ----------------------------
+    # Return response
+    # ----------------------------
     return {
         "status": "success",
         "data": {
@@ -64,13 +73,3 @@ async def generate_path(request: GeneratePathRequest):
             "db_insert": "success" if save_response.data else "failed"
         }
     }
-
-
-
-
-
-
-
-
-
-
