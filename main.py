@@ -45,12 +45,15 @@ async def generate_path(request: GeneratePathRequest):
         raise HTTPException(status_code=500, detail="Failed to generate learning path")
 
     save_response = save_learning_path(
-        learner_id=learner["id"],
-        phases=result["phases"],
-        explanation=result["explanation"],
-        estimated_duration_weeks=result.get("estimated_duration_weeks"),
-        success_probability=result.get("success_probability")
-    )
+    learner_id=learner["id"],
+    phases=result["phases"],
+    explanation_basics=result.get("explanation_basics"),
+    explanation_intermediate=result.get("explanation_intermediate"),
+    explanation_advanced=result.get("explanation_advanced"),
+    explanation_outcomes=result.get("explanation_outcomes"),
+    estimated_duration_weeks=result.get("estimated_duration_weeks"),
+    success_probability=result.get("success_probability")
+)
 
     return {
         "status": "success",
@@ -65,5 +68,6 @@ if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))
 
     uvicorn.run("main:app", host="0.0.0.0", port=port)
+
 
 
