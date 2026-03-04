@@ -5,7 +5,7 @@ def fetch_learner(user_id: str):
 
     response = supabase.table("learners") \
         .select("*") \
-        .eq("id", user_id) \
+        .eq("user_id", user_id) \
         .execute()
 
     if not response.data:
@@ -13,3 +13,4 @@ def fetch_learner(user_id: str):
 
 
     return response.data[0]
+
