@@ -1,3 +1,5 @@
+from db import supabase
+
 def fetch_learner(user_id: str):
     response = supabase.table("learners") \
         .select("*") \
@@ -16,3 +18,4 @@ def fetch_learner(user_id: str):
         return None
 
     return response_filtered.data[0]
+
