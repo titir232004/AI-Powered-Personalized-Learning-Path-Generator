@@ -41,27 +41,16 @@ async def generate_path(request: GeneratePathRequest):
 
     result = await generate_learning_path(learner)
 
-    if not result:
-        raise HTTPException(status_code=500, detail="Failed to generate learning path")
-
-    # -----------------------------
-    # 🔹 Debug: print full result
-    # -----------------------------
-    print("=== Generated Learning Path ===")
-    import json
-    print(json.dumps(result, indent=2))
-    print("=== End of Learning Path ===")
-
     save_response = save_learning_path(
         learner_id=learner["id"],
         phases=result["phases"],
-        explanation_basics=result.get("explanation_basics"),
-        explanation_intermediate=result.get("explanation_intermediate"),
-        explanation_advanced=result.get("explanation_advanced"),
-        explanation_outcomes=result.get("explanation_outcomes"),
-        estimated_duration_weeks=result.get("estimated_duration_weeks"),
-        success_probability=result.get("success_probability")
-    )
+        explanation_basics=result["explanation_basics"],
+        explanation_intermediate=result["explanation_intermediate"],
+        explanation_advanced=result["explanation_advanced"],
+        explanation_outcomes=result["explanation_outcomes"],
+        estimated_duration_weeks=result["estimated_duration_weeks"],
+        success_probability=result["success_probability"]
+)
 
     return {
         "status": "success",
@@ -75,6 +64,7 @@ async def generate_path(request: GeneratePathRequest):
             "db_insert": "success" if save_response.data else "failed"
         }
     }
+
 
 
 
