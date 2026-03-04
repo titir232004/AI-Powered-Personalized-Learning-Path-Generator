@@ -32,9 +32,15 @@ def save_learning_path(
 
     response = supabase.table("learning_paths").insert(data_to_insert).execute()
 
+    print("=== FULL SUPABASE RESPONSE ===")
+    print("data:", response.data)
+    print("error:", getattr(response, "error", None))
+    print("================================")
+
     if response.data:
         print("✅ Database insert successful")
     else:
-        print("❌ Database insert failed:", response)
+        print("❌ Database insert failed")
 
     return response
+
