@@ -60,7 +60,10 @@ async def generate_path(request: GeneratePathRequest):
         "data": {
             "learner_id": user_id,
             "phases": result["phases"],
-            "explanation": result["explanation"],
+            "explanation_basics": result.get("explanation_basics"),
+            "explanation_intermediate": result.get("explanation_intermediate"),
+            "explanation_advanced": result.get("explanation_advanced"),
+            "explanation_outcomes": result.get("explanation_outcomes"),
             "db_insert": "success" if save_response.data else "failed"
         }
     }
@@ -68,6 +71,7 @@ if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))
 
     uvicorn.run("main:app", host="0.0.0.0", port=port)
+
 
 
 
