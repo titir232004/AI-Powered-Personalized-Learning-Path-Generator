@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 load_dotenv()
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-YOUTUBE_API_KEY = "AIzaSyCMPZOEuKbKFLVKYrGpSCqD2w6A9aWZv0I"
+YOUTUBE_API_KEY = ""
 
 
 def fetch_youtube(skill_name, max_results=2):
@@ -51,5 +51,6 @@ def fetch_youtube(skill_name, max_results=2):
     else:
         print(f"❌ No YouTube playlists found for {skill_name}")
         print(data)
+
 
     return playlists
