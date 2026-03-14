@@ -209,6 +209,9 @@ def submit_assessment(domain: str, submission: AssessmentSubmission):
     answers = submission.answers or {}
     time_taken = submission.time_taken_seconds or 0
 
+    if len(answers) < 15:
+        logger.warning(f"Incomplete assessment submission :{len(answers)}/15 answered")
+        
     # verify learner exists
     learner_resp = (
         supabase.table(LEARNERS_TABLE)
@@ -309,9 +312,12 @@ def submit_assessment(domain: str, submission: AssessmentSubmission):
             "difficulty": difficulty,
             "skill": skill
         })
+        
 
-    total_answered = len(answers) if answers else 0
-    percentage = round((correct/total_answered)*100,2) if total_answered>0 else 0.0
+    TOTAL_QUESTIONS = 15
+    total_answered = len(answers) 
+    total_questions = TOTAL_QUESTIONS
+    percentage = round((correct/total_questions)*100,2) 
 
     skill_report = []
     skill_gaps = []
@@ -330,7 +336,7 @@ def submit_assessment(domain: str, submission: AssessmentSubmission):
         "started_at": datetime.utcnow().isoformat(),
         "submitted_at": datetime.utcnow().isoformat(),
         "time_taken_seconds": time_taken,
-        "total_questions": total_answered,
+        "total_questions": TOTAL_QUESTIONS,
         "correct_answers": correct,
         "overall_percentage": percentage,
         "difficulty_breakdown": difficulty_stats,
@@ -352,7 +358,7 @@ def submit_assessment(domain: str, submission: AssessmentSubmission):
         "attempt_number": attempt_number,
         "overall_percentage": percentage,
         "correct": correct,
-        "total": total_answered,
+        "total": TOTAL_QUESTIONS,
         "time_taken_seconds": time_taken,
         "learner": {
             "name": learner.get("full_name") or learner.get("name"),
