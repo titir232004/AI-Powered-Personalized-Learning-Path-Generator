@@ -110,8 +110,8 @@ DOMAIN_SKILLS = {
             5: "Version Control"
         }
     },
-    "Full Stack Development": {
-        "name": "Full Stack Development",
+    "Full Stack Developer": {
+        "name": "Full Stack Developer",
         "skill_ids": [17, 18, 19, 20, 21, 22, 23, 16, 24, 25, 26, 27, 28, 29, 30, 5],
         "skills": {
             17: "JavaScript",
@@ -175,6 +175,8 @@ def start_assessment(learner_id: str):
         raise HTTPException(404, "Learner not found")
 
     domain = learner.get("target_job_role") or learner.get("target_role") or learner.get("domain")
+    logger.info(f"Learner domain from DB: {domain}")
+    logger.info(f"Supported domains in backend: {list(DOMAIN_SKILLS.keys())}")
     if not domain or domain not in DOMAIN_SKILLS:
         raise HTTPException(status_code=400, detail=f"Unsupported domain: {domain}")
 
